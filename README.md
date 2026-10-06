@@ -41,6 +41,21 @@ Open:
 http://localhost:3000
 ~~~
 
+## Zerodha credentials
+
+The existing `API_KEY` variable protects SuruTech Trade AI's own local API. It is **not** the Zerodha API key.
+
+Put your Zerodha Kite Connect credentials only in your local `.env` file:
+
+~~~env
+KITE_API_KEY=your_zerodha_api_key
+KITE_API_SECRET=your_zerodha_api_secret
+KITE_REDIRECT_URL=http://localhost:3000/auth/zerodha/callback
+KITE_ACCESS_TOKEN=
+~~~
+
+Do not commit your real Zerodha API key, API secret, request token, access token, password, PIN, OTP, cookies, or session data to GitHub.
+
 ## Tomorrow's test plan
 
 1. Start the local server before market open.
@@ -56,7 +71,7 @@ http://localhost:3000
 - local 3-minute candle builder from observed market values
 - position / LTP / P&L guidance
 - alerts for support, resistance, stop and profit protection
-- optional official Kite Connect market-data integration later
+- official Kite Connect login + live market-data integration
 - trade journal and backtesting
 
 ## Security
