@@ -1,9 +1,9 @@
 {
-  "name": "ai-day-trading-assistant",
-  "version": "0.1.0",
+  "name": "surutech-trade-ai",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Rule-based AI-assisted intraday signal engine for NIFTY/Bank NIFTY with paper-trading risk controls.",
+  "description": "SuruTech Trade AI: local intraday market-analysis and paper-trading assistant for NIFTY/Bank NIFTY.",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
