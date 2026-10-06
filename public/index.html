@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Day Trading Assistant</title>
+  <style>
+    body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#0f172a;color:#e2e8f0}
+    main{max-width:980px;margin:0 auto;padding:24px}
+    .card{background:#111c30;border:1px solid #26364f;border-radius:16px;padding:18px;margin:14px 0}
+    input,textarea,button{font:inherit;border-radius:10px;border:1px solid #334155;padding:10px}
+    input,textarea{background:#0b1220;color:#e2e8f0}
+    textarea{width:100%;min-height:240px;box-sizing:border-box}
+    button{background:#2563eb;color:white;border:0;font-weight:700;cursor:pointer}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+    .signal{font-size:36px;font-weight:800}
+    .muted{color:#94a3b8}
+    pre{white-space:pre-wrap;word-break:break-word}
+  </style>
+</head>
+<body>
+<main>
+  <h1>AI Day Trading Assistant 📈</h1>
+  <p class="muted">3-minute rule-based CE / PE / WAIT assistant. Analysis only; no live order execution.</p>
+
+  <section class="card">
+    <div class="grid">
+      <label>Symbol<br><input id="symbol" value="NIFTY"></label>
+      <label>Capital (₹)<br><input id="capital" type="number" value="100000"></label>
+      <label>Daily P&L (₹)<br><input id="dailyPnl" type="number" value="0"></label>
+      <label>Trades today<br><input id="tradesToday" type="number" value="0"></label>
+      <label>Option premium (optional)<br><input id="premium" type="number" placeholder="e.g. 120"></label>
+      <label>API key (optional)<br><input id="apiKey" type="password"></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>Paste 3-minute candles as JSON</h3>
+    <p class="muted">Minimum 25 candles. Format: [{"ts":"...","open":...,"high":...,"low":...,"close":...,"volume":...}]</p>
+    <textarea id="candles"></textarea>
+    <p><button id="analyze">Analyze</button></p>
+  </section>
+
+  <section class="card" id="summary" hidden>
+    <div class="signal" id="action">WAIT</div>
+    <div id="plan"></div>
+  </section>
+
+  <section class="card">
+    <h3>Raw result</h3>
+    <pre id="result">Waiting for data…</pre>
+  </section>
+
+  <section class="card">
+    <strong>Risk rule:</strong> never average a losing option; use a broker-side stop; stop trading when the daily-loss or max-trades limit is reached.
+  </section>
+</main>
+<script>
+document.getElementById("analyze").onclick = async () => {
+  const result = document.getElementById("result");
+  try {
+    const candles = JSON.parse(document.getElementById("candles").value);
+    const headers = {"content-type":"application/json"};
+    const key = document.getElementById("apiKey").value;
+    if (key) headers["x-api-key"] = key;
+
+    const body = {
+      symbol: document.getElementById("symbol").value || "NIFTY",
+      capital: Number(document.getElementById("capital").value),
+      dailyPnl: Number(document.getElementById("dailyPnl").value),
+      tradesToday: Number(document.getElementById("tradesToday").value),
+      optionPremium: Number(document.getElementById("premium").value) || undefined,
+      candles
+    };
+
+    const r = await fetch("/api/analyze", {method:"POST", headers, body:JSON.stringify(body)});
+    const data = await r.json();
+    result.textContent = JSON.stringify(data, null, 2);
+
+    if (data.signal) {
+      document.getElementById("summary").hidden = false;
+      document.getElementById("action").textContent =
+        data.signal.action === "WAIT" ? "WAIT" : `BUY ${data.signal.option}`;
+      const p = data.signal.tradePlan;
+      document.getElementById("plan").innerHTML = p
+        ? `Spot: <b>${data.signal.spot}</b> · SL: <b>${p.stopSpot}</b> · Targets: <b>${p.targets.join(" / ")}</b> · Confidence: <b>${data.signal.confidence}%</b>`
+        : `Spot: <b>${data.signal.spot}</b> · Confidence: <b>${data.signal.confidence}%</b>`;
+    }
+  } catch (e) {
+    result.textContent = e.message;
+  }
+};
+</script>
+</body>
+</html>
